@@ -38,6 +38,8 @@ import bpy  # first: importing bpy is what makes bmesh and mathutils available
 import bmesh
 from mathutils import Matrix
 
+import math #used for food
+
 # Paths from this file, not the current directory, so the script works from anywhere.
 # Build them with pathlib rather than gluing strings together, as Blender's gotchas advise:
 # https://docs.blender.org/api/current/info_gotchas_file_paths_and_encoding.html
@@ -49,7 +51,7 @@ VOXELS = 4  # voxels per cell edge
 
 MATERIALS = []  # every material, in order; a face's material_index points into this list
 PALETTE = {}  # voxel character -> index in MATERIALS; filled in by make_materials()
-
+CANDY = {} 
 
 def reset_scene():
     """Start from an empty file, so nothing from Blender's default scene (cube, camera,
@@ -96,6 +98,11 @@ def make_materials():
         "s": pbr_material("Stone", "#d5bdaf", roughness=0.85),
         "t": pbr_material("Moss", "#b9fbc0", roughness=0.9),
         "w": pbr_material("Brick", "#e27396", roughness=0.9),
+    })
+    CANDY.update({ #candy color values
+        "stick": pbr_material("Stick", "#f6ecd9", roughness=0.8),
+        "candy": pbr_material("Candy", "#ff5d8f", roughness=0.25, emission="#ff5d8f", strength=0.8),
+        "swirl": pbr_material("Swirl", "#fff5f8", roughness=0.25, emission="#fff5f8", strength=0.5),
     })
 
 
@@ -192,6 +199,29 @@ def build_wall(bm):
         """] * 3)
 
 
+def cylinder(bm, material, radius, depth, center, segments=16, axis="Z"): #Creates a cylinder shape used for the lolipop candy and stick
+    rotation = Matrix.Rotation(math.pi / 2, 4, "X") if axis == "Y" else Matrix.Identity(4)
+    bar = bmesh.ops.create_cone(
+        bm,
+        cap_ends=True,
+        cap_tris=False,
+        segments=segments,
+        radius1=radius,
+        radius2=radius,
+        depth=depth,
+        matrix=Matrix.Translation(center) @ rotation,
+    )
+    for face in {f for v in bar["verts"] for f in v.link_faces}:
+        face.material_index = material
+
+
+def build_lollipop(bm): #Creates the lolipop using the cylinder function making a stick, candy, and swirl
+    tip = (0, 0, 0.66)
+    cylinder(bm, CANDY["stick"], radius=0.045, depth=0.66, center=(0, 0, 0.33), segments=12)
+    cylinder(bm, CANDY["candy"], radius=0.30, depth=0.12, center=tip, segments=24, axis="Y")
+    cylinder(bm, CANDY["swirl"], radius=0.11, depth=0.16, center=tip, segments=16, axis="Y")
+
+
 PIECES = {  # the dragon kit; the game finds each mesh by these names
     "head": build_head,
     "straight": build_straight,
@@ -201,6 +231,9 @@ PIECES = {  # the dragon kit; the game finds each mesh by these names
 TILES = {  # one entry per kind in core/board.gd's TILES; a new kind is one builder and one line
     "floor": build_floor,
     "wall": build_wall,
+}
+PROPS = {  # things that sit on the board without being a tile kind
+    "lollipop": build_lollipop,
 }
 
 
@@ -237,7 +270,7 @@ def lay_out_kit(scene):
     """One row per registry, so a GLB viewer shows a tidy catalog instead of every piece
     stacked on the origin. Each mesh is still modeled around its own cell's center."""
     spacing = 1.5
-    for row, registry in enumerate([PIECES, TILES]):
+    for row, registry in enumerate([PIECES, TILES, PROPS]):
         for column, (name, build) in enumerate(registry.items()):
             make_object(scene, name, build, location=(column * spacing, -row * spacing, 0))
 
