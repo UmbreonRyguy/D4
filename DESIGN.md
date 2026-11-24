@@ -5,8 +5,9 @@ to learn where your project is headed. Replace each _italic prompt_.
 
 ## Target
 
-_One or two sentences: what is this creature, what does it eat, where does it live,
-and what should playing feel like?_
+Creature: Dragon
+Food: Candy
+Feel: Game is simple, pastel and sweet.
 
 ## Menu choices
 
