@@ -29,6 +29,17 @@ func turn(direction: Vector2i) -> void:
 
 ## Advance one cell, taking the next queued turn first. Wrapping around the grid is a
 ## placeholder: once Session ends the run at solid tiles, the dragon never reaches an edge.
+func _head_plan():
+	if not _turns.is_empty():
+		next = _turns[0]
+	else:
+		next = heading
+	return body[0] + next
+func _commit():
+	if not _turns.is_empty():
+		heading = turns.pop_front()
+	head = body[0]
+	body = [head + heading] + body.first(body.size()-1)
 func tick() -> void:
 	if not _turns.is_empty():
 		heading = _turns.pop_front()

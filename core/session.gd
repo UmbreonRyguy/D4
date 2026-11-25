@@ -6,6 +6,7 @@ extends RefCounted
 
 const FOOD_SEED := 42  #random value for food placement, changed after each round
 
+var session: running
 var board: Board
 var dragon: Dragon
 var food := Vector2i.ZERO  #cell that holds food
@@ -25,7 +26,11 @@ func _init(grid_size: Vector2i) -> void:
 ## else, which is why they go here rather than in Dragon.tick.
 func tick() -> void:
 	var tail: Vector2i = dragon.body.back()
-	dragon.tick()
+	if status !=running:
+		return;
+		if board.is_solid(target):
+			status = over
+			return
 	if dragon.body[0] == food:  #grow dragon based on score, place food
 		score += 1
 		dragon.body.append(tail)

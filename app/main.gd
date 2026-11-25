@@ -49,7 +49,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	_clock += delta
-	while _clock >= TICK_SECONDS:
+	while _clock >= TICK_SECONDS && session.status():
 		_clock -= TICK_SECONDS
 		session.tick()
 		_draw_dragon()
