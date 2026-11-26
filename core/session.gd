@@ -26,11 +26,12 @@ func _init(grid_size: Vector2i) -> void:
 ## else, which is why they go here rather than in Dragon.tick.
 func tick() -> void:
 	var tail: Vector2i = dragon.body.back()
-	if status !=running:
+	if status != running:
 		return;
-		if board.is_solid(target):
+		if board.is_solid():
 			status = over
 			return
+		dragon.commit()
 	if dragon.body[0] == food:  #grow dragon based on score, place food
 		score += 1
 		dragon.body.append(tail)
